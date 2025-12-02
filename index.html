@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Stop Trip Cost Calculator</title>
+    <title>Shibu's App</title>
     <!-- Load Tailwind CSS for modern, responsive styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -37,35 +37,57 @@
         #round-trip-toggle:checked ~ .dot {
             transform: translateX(100%);
         }
+        
+        /* New custom CSS to ensure input alignment */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ensure labels have a consistent height so inputs align */
+        .input-label-container {
+            min-height: 40px; /* Adjust height based on font size and padding */
+            display: flex;
+            align-items: center;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 flex items-start md:items-center justify-center font-sans">
 
     <div class="w-full max-w-lg bg-white p-6 md:p-8 rounded-xl shadow-2xl space-y-6 mb-8">
         <h1 class="text-3xl font-extrabold text-gray-800 text-center border-b pb-3 mb-4">
-            Itinerary and Trip Cost Planner
+            Shibu's App
         </h1>
 
         <!-- Input Section -->
         <div id="input-section" class="space-y-6">
             
-            <!-- Fuel Inputs (MOVED TO TOP) -->
+            <!-- Fuel Inputs (NOW ALIGNED) -->
             <div class="grid grid-cols-2 gap-4 pb-4 border-b border-gray-200">
-                <label class="block">
-                    <!-- UPDATED: Use smaller text size on mobile to prevent label wrapping -->
-                    <span class="text-xs sm:text-sm font-medium text-gray-700">Fuel Efficiency (km/L or mi/gal)</span>
-                    <input id="fuel-efficiency-input" type="number" min="1" placeholder="e.g., 10" value="10"
-                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                           required>
-                </label>
+                
+                <div class="input-group">
+                    <label class="block">
+                        <!-- Standardized label container height -->
+                        <div class="input-label-container">
+                            <span class="text-xs sm:text-sm font-medium text-gray-700">Fuel Efficiency (km/L or mi/gal)</span>
+                        </div>
+                        <input id="fuel-efficiency-input" type="number" min="1" placeholder="e.g., 10" value="10"
+                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                               required>
+                    </label>
+                </div>
 
-                <label class="block">
-                    <!-- UPDATED: Use smaller text size on mobile to prevent label wrapping -->
-                    <span class="text-xs sm:text-sm font-medium text-gray-700">Fuel Price (per L or gal)</span>
-                    <input id="fuel-price-input" type="number" min="0.01" step="0.01" placeholder="e.g., 1.50" value="1.50"
-                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                           required>
-                </label>
+                <div class="input-group">
+                    <label class="block">
+                        <!-- Standardized label container height -->
+                         <div class="input-label-container">
+                            <span class="text-xs sm:text-sm font-medium text-gray-700">Fuel Price (per L or gal)</span>
+                        </div>
+                        <input id="fuel-price-input" type="number" min="0.01" step="0.01" placeholder="e.g., 1.50" value="1.50"
+                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                               required>
+                    </label>
+                </div>
             </div>
 
 

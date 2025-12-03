@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shibu's App</title>
+    <title>Shibu's App: Multi-Stop Trip Cost Calculator</title>
     <!-- Load Tailwind CSS for modern, responsive styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -38,7 +38,7 @@
             transform: translateX(100%);
         }
         
-        /* New custom CSS to ensure input alignment */
+        /* Custom CSS to ensure input alignment */
         .input-group {
             display: flex;
             flex-direction: column;
@@ -46,9 +46,14 @@
 
         /* Ensure labels have a consistent height so inputs align */
         .input-label-container {
-            min-height: 40px; /* Adjust height based on font size and padding */
+            min-height: 40px; 
             display: flex;
             align-items: center;
+        }
+
+        /* Stop group hover effect for drag-and-drop clarity */
+        .stop-group:hover {
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* blue ring on hover */
         }
     </style>
 </head>
@@ -56,18 +61,18 @@
 
     <div class="w-full max-w-lg bg-white p-6 md:p-8 rounded-xl shadow-2xl space-y-6 mb-8">
         <h1 class="text-3xl font-extrabold text-gray-800 text-center border-b pb-3 mb-4">
-            Shibu's App
+            Shibu's Trip Cost Calculator
         </h1>
+        <p class="text-sm text-gray-500 text-center">Calculate distance, time, and fuel cost for multi-stop trips within Manitoba, Canada.</p>
 
         <!-- Input Section -->
         <div id="input-section" class="space-y-6">
             
-            <!-- Fuel Inputs (NOW ALIGNED) -->
+            <!-- Fuel Inputs -->
             <div class="grid grid-cols-2 gap-4 pb-4 border-b border-gray-200">
                 
                 <div class="input-group">
                     <label class="block">
-                        <!-- Standardized label container height -->
                         <div class="input-label-container">
                             <span class="text-xs sm:text-sm font-medium text-gray-700">Fuel Efficiency (km/L or mi/gal)</span>
                         </div>
@@ -79,7 +84,6 @@
 
                 <div class="input-group">
                     <label class="block">
-                        <!-- Standardized label container height -->
                          <div class="input-label-container">
                             <span class="text-xs sm:text-sm font-medium text-gray-700">Fuel Price (per L or gal)</span>
                         </div>
@@ -108,7 +112,7 @@
 
             <!-- 2. Pickup Locations -->
             <div class="space-y-3 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                <h2 class="text-lg font-bold text-yellow-800">Pickup Locations (Drag to reorder)</h2>
+                <h2 class="text-lg font-bold text-yellow-800">Pickup Locations (Waypoints before Drop-offs)</h2>
                 <div id="pickup-container" class="space-y-4">
                     <!-- Pickups will be added here dynamically -->
                 </div>
@@ -120,7 +124,7 @@
             
             <!-- 3. Drop-off Locations -->
             <div class="space-y-3 p-4 bg-green-50 rounded-lg border border-green-200">
-                <h2 class="text-lg font-bold text-green-800">Drop-off Locations (Drag to reorder)</h2>
+                <h2 class="text-lg font-bold text-green-800">Drop-off Locations (Final Drop-off is last in list)</h2>
                 <div id="dropoff-container" class="space-y-4">
                     <!-- Drop-offs will be added here dynamically (Default added in JS) -->
                 </div>
@@ -165,9 +169,9 @@
                     <span class="font-semibold text-gray-600">Estimated Travel Time:</span>
                     <span id="display-duration" class="font-bold text-blue-600">--</span>
                 </div>
-                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg shadow-sm">
-                    <span class="font-semibold text-gray-600">Estimated Fuel Cost:</span>
-                    <span id="display-cost" class="font-bold text-green-600 text-xl">--</span>
+                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg shadow-lg border-2 border-green-400">
+                    <span class="font-extrabold text-gray-700 text-lg">Estimated Fuel Cost:</span>
+                    <span id="display-cost" class="font-extrabold text-green-700 text-2xl">--</span>
                 </div>
             </div>
 
@@ -178,11 +182,23 @@
         </div>
     </div>
 
-    <!-- Google Maps API Script -->
-    <script>
-        // !! IMPORTANT: REPLACE WITH YOUR ACTUAL API KEY !!
-        const API_KEY = "YOUR_API_KEY_HERE";
+    <!-- 1. Load the external configuration file (config.js) first -->
+    <!-- The API_KEY variable will be defined here -->
+    <script src="config.js"></script>
 
+    <!-- 2. Main Application Script -->
+    <script>
+        // Check for required API_KEY constant from config.js
+        if (typeof API_KEY === 'undefined') {
+            document.addEventListener('DOMContentLoaded', () => {
+                const errorBox = document.getElementById('message-box');
+                errorBox.classList.remove('hidden');
+                errorBox.classList.add('bg-red-200', 'text-red-800');
+                errorBox.textContent = "FATAL ERROR: 'API_KEY' not found. Please ensure config.js is loaded correctly and defines const API_KEY.";
+            });
+        }
+        
+        // --- DOM Element References ---
         const calculateButton = document.getElementById('calculate-button');
         const addPickupButton = document.getElementById('add-pickup-button');
         const addDropoffButton = document.getElementById('add-dropoff-button');
@@ -208,10 +224,10 @@
         let geocoder; 
         let uniqueIdCounter = 0; 
         
-        // --- Manitoba Restriction Constants (NEW) ---
-        // Define approximate bounding box for Manitoba for search biasing
-        const MANITOBA_NE = { lat: 60.0, lng: -88.0 }; // Northeast corner approximation
-        const MANITOBA_SW = { lat: 49.0, lng: -102.0 }; // Southwest corner approximation
+        // --- Manitoba Restriction Constants ---
+        // Coordinates defining the bounding box for Manitoba, Canada
+        const MANITOBA_NE = { lat: 60.0, lng: -88.0 }; 
+        const MANITOBA_SW = { lat: 49.0, lng: -102.0 }; 
         const CANADA_RESTRICTION = { country: 'ca' };
         // --- End Restriction Constants ---
 
@@ -220,58 +236,55 @@
         let dragSrcEl = null;
 
         function handleDragStart(e) {
-            this.style.opacity = '0.4'; // Visual feedback for dragging
+            this.style.opacity = '0.4'; 
             dragSrcEl = this;
             e.dataTransfer.effectAllowed = 'move';
-            // Set data to identify the element type (pickup/dropoff)
+            // Store the stop type to prevent mixing pickup and dropoff lists
             e.dataTransfer.setData('text/plain', this.getAttribute('data-stop-type')); 
         }
 
         function handleDragEnd(e) {
             this.style.opacity = '1';
-            // Clear all visual drag over effects
+            // Clean up any drag styling
             document.querySelectorAll('.stop-group').forEach(item => {
-                item.classList.remove('border-blue-400', 'border-2', 'border-dashed');
+                item.classList.remove('border-blue-400', 'border-2', 'border-dashed', 'bg-blue-50');
             });
         }
 
         function handleDragOver(e) {
-            e.preventDefault(); // Necessary to allow dropping
+            e.preventDefault(); 
             e.dataTransfer.dropEffect = 'move';
             return false;
         }
 
         function handleDragEnter(e) {
-            // Check if the source and target types match
             const sourceType = dragSrcEl.getAttribute('data-stop-type');
             const targetType = this.getAttribute('data-stop-type');
 
+            // Only highlight if the drag source and target are in the same list type
             if (dragSrcEl !== this && sourceType === targetType) {
-                 this.classList.add('border-blue-400', 'border-2', 'border-dashed');
+                 this.classList.add('border-blue-400', 'border-2', 'border-dashed', 'bg-blue-50');
             }
         }
 
         function handleDragLeave(e) {
-            this.classList.remove('border-blue-400', 'border-2', 'border-dashed');
+            this.classList.remove('border-blue-400', 'border-2', 'border-dashed', 'bg-blue-50');
         }
 
         function handleDrop(e) {
             e.stopPropagation();
             
-            this.classList.remove('border-blue-400', 'border-2', 'border-dashed');
+            this.classList.remove('border-blue-400', 'border-2', 'border-dashed', 'bg-blue-50');
 
             if (dragSrcEl !== this) {
                 const sourceType = dragSrcEl.getAttribute('data-stop-type');
                 const targetType = this.getAttribute('data-stop-type');
 
-                // Only allow dropping within the same container type
                 if (sourceType === targetType) {
+                    // Perform the actual DOM manipulation to reorder the element
                     const targetContainer = this.parentNode;
-                    
-                    // Insert the dragged element before the element being dragged over
+                    // Insert the dragged element before the element it was dropped on
                     targetContainer.insertBefore(dragSrcEl, this);
-                    
-                    // Re-label the stops to update numbers
                     relabelStops();
                 } else {
                     displayMessage(`Cannot move a ${sourceType} stop into the ${targetType} section.`, 'error');
@@ -280,6 +293,9 @@
             return false;
         }
 
+        /**
+         * Attaches all necessary drag-and-drop event listeners to a stop element.
+         */
         function setupDragAndDrop(element) {
             element.addEventListener('dragstart', handleDragStart);
             element.addEventListener('dragenter', handleDragEnter);
@@ -293,54 +309,51 @@
 
         /**
          * Clears and displays a temporary message in the message box.
-         * @param {string} text The message to display.
-         * @param {string} type 'error' (red) or 'info' (blue).
          */
         function displayMessage(text, type = 'error') {
             messageBox.textContent = text;
-            messageBox.className = 'mt-4 p-3 rounded-lg hidden';
+            messageBox.className = 'mt-4 p-3 rounded-lg hidden'; // Reset classes
+            
             if (type === 'error') {
-                messageBox.classList.add('bg-red-100', 'text-red-700');
+                messageBox.classList.add('bg-red-100', 'text-red-700', 'shadow-md');
             } else if (type === 'info') {
                 messageBox.classList.add('bg-blue-100', 'text-blue-700');
             }
             messageBox.classList.remove('hidden');
 
-            // Optionally hide after a few seconds if it's an info message
             if (type === 'info') {
+                 // Auto-hide info messages after 3 seconds
                  setTimeout(() => messageBox.classList.add('hidden'), 3000);
             }
         }
 
         /**
          * Initializes Google Maps Autocomplete for a specific input field,
-         * restricting results to Canada and biasing towards Manitoba.
+         * restricting searches to Canada and providing a bias towards Manitoba.
          */
         function initializeAutocompleteForInput(inputElement) {
-            if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+            if (typeof google === 'undefined' || typeof google.maps === 'undefined' || !inputElement) {
                  return;
             }
 
-            // Create LatLngBounds for Manitoba biasing
             const manitobaBounds = new google.maps.LatLngBounds(MANITOBA_SW, MANITOBA_NE);
 
             const autocompleteOptions = {
                 fields: ["formatted_address", "geometry", "name"],
-                strictBounds: false, // Use biasing, not strict restriction
+                strictBounds: false, // Bias towards, but don't strictly restrict to, the bounds
                 types: ["geocode", "establishment"],
-                // Restrict results to Canada
                 componentRestrictions: CANADA_RESTRICTION,
-                // Bias results toward Manitoba
                 bounds: manitobaBounds, 
             };
 
-            const autocomplete = new google.maps.places.Autocomplete(inputElement, autocompleteOptions);
+            new google.maps.places.Autocomplete(inputElement, autocompleteOptions);
         }
 
         /**
-         * Master function to initialize Google services.
+         * Master function to initialize Google services after the API script loads.
+         * This function is set as the callback for the Google Maps script load.
          */
-        function initAutocomplete() {
+        window.initAutocomplete = function() {
             if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
                  displayMessage("Google Maps API failed to load. Please check your API key.", 'error');
                  return;
@@ -349,24 +362,26 @@
             directionsService = new google.maps.DirectionsService();
             geocoder = new google.maps.Geocoder(); 
             
+            // Initialize autocomplete for the origin input
             initializeAutocompleteForInput(originInput);
             
+            // Initialize autocompletes for any existing dynamic stops (if any)
             document.querySelectorAll('.pickup-input, .dropoff-input').forEach(initializeAutocompleteForInput);
             
-            // Add default stops on load
+            // Ensure there is at least one input for pickup and drop-off to start
             if (pickupContainer.children.length === 0) {
                  addPickup();
             }
-            
             if (dropoffContainer.children.length === 0) {
                  addDropoff();
             }
             
-            displayMessage("Google Maps services loaded and restricted to Manitoba, Canada.", 'info');
+            displayMessage("Google Maps services loaded and location search is biased towards Manitoba, Canada.", 'info');
         }
         
         /**
-         * Uses the Geolocation API to find and set the user's current location.
+         * Uses the browser's Geolocation API to find the user's current position
+         * and reverse geocode it to set the Origin input value.
          */
         function setCurrentLocation() {
             if (typeof google === 'undefined' || typeof google.maps === 'undefined' || !geocoder) {
@@ -379,7 +394,7 @@
                 return;
             }
 
-            // Temporarily disable button and show a loading state
+            // Show loading state on the button
             currentLocationButton.disabled = true;
             const originalText = currentLocationButton.innerHTML;
             currentLocationButton.innerHTML = `<div class="spinner w-4 h-4 mr-2"></div> Finding...`;
@@ -390,7 +405,7 @@
                     lng: position.coords.longitude,
                 };
 
-                // Use Geocoder to turn coordinates into a human-readable address
+                // Reverse geocoding to get a readable address
                 geocoder.geocode({ location: latlng }, (results, status) => {
                     currentLocationButton.disabled = false;
                     currentLocationButton.innerHTML = originalText;
@@ -399,12 +414,13 @@
                         originInput.value = results[0].formatted_address;
                         displayMessage("Current location set!", 'info');
                     } else {
-                        // Fallback to coordinates if geocoding fails
+                        // Fallback to coordinates if reverse geocoding fails
                         originInput.value = `${latlng.lat}, ${latlng.lng}`;
                         displayMessage("Failed to find exact address, using coordinates.", 'info');
                     }
                 });
             }, (error) => {
+                // Handle geolocation errors
                 currentLocationButton.disabled = false;
                 currentLocationButton.innerHTML = originalText;
 
@@ -429,22 +445,21 @@
 
 
         /**
-         * Generic function to add a stop of a specific type.
+         * Generic function to add a stop input element to a container.
          */
         function addStop(type, container, placeholder) {
             uniqueIdCounter++;
             const newStopId = `${type}-input-${uniqueIdCounter}`;
             
             const stopDiv = document.createElement('div');
-            // ADDED drag-and-drop attributes and styling
-            stopDiv.className = 'flex space-x-2 stop-group p-2 rounded-lg shadow-sm border border-gray-200 cursor-move bg-white';
+            stopDiv.className = 'flex space-x-2 stop-group p-2 rounded-lg shadow-sm border border-gray-200 cursor-move bg-white transition duration-150 ease-in-out';
             stopDiv.setAttribute('draggable', 'true');
             stopDiv.setAttribute('data-stop-type', type);
 
 
             stopDiv.innerHTML = `
                 <!-- Drag Handle -->
-                <div class="drag-handle text-gray-400 self-center hover:text-gray-600 transition duration-150 cursor-grab">
+                <div class="drag-handle text-gray-400 self-center p-1 hover:text-gray-700 transition duration-150 cursor-grab">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </div>
                 <label class="block flex-grow">
@@ -458,13 +473,15 @@
             `;
 
             container.appendChild(stopDiv);
-            initializeAutocompleteForInput(document.getElementById(newStopId));
+            // Wait for the script to load before trying to init Autocomplete
+            if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
+                initializeAutocompleteForInput(document.getElementById(newStopId));
+            }
+            
             relabelStops();
-
-            // Setup Drag and Drop events
             setupDragAndDrop(stopDiv);
 
-            // Add event listener for the remove button
+            // Add event listener for removal
             stopDiv.querySelector('.remove-stop-button').addEventListener('click', () => {
                 removeStop(stopDiv);
             });
@@ -487,10 +504,9 @@
         }
         
         /**
-         * Re-labels all dynamic stops based on their container and position.
+         * Re-labels all dynamic stops based on their container and position (e.g., Pickup 1, Drop-off 2).
          */
         function relabelStops() {
-            // Label Pickups
             const pickupGroups = pickupContainer.querySelectorAll('.stop-group');
             pickupGroups.forEach((group, index) => {
                 const labelSpan = group.querySelector('.stop-label');
@@ -499,7 +515,6 @@
                 }
             });
 
-            // Label Drop-offs
             const dropoffGroups = dropoffContainer.querySelectorAll('.stop-group');
             const totalDropoffs = dropoffGroups.length;
 
@@ -514,13 +529,10 @@
 
 
         /**
-         * Calculates the return trip from the final destination back to the origin.
-         * @param {string} origin The starting point of the whole trip.
-         * @param {string} destination The final drop-off point (start of the return leg).
-         * @param {number} currentDistance The distance accumulated in the primary leg (in meters).
-         * @param {number} currentDuration The duration accumulated in the primary leg (in seconds).
+         * Calculates the return trip from the final destination back to the origin,
+         * and adds its distance/duration to the running total.
          */
-        function calculateReturnTrip(origin, destination, currentDistance, currentDuration) {
+        function calculateReturnTrip(origin, destination, currentDistance, currentDuration, fuelEfficiency, fuelPrice) {
             const returnRequest = {
                 origin: destination,
                 destination: origin,
@@ -529,13 +541,9 @@
             };
 
             directionsService.route(returnRequest, (response, status) => {
-                const fuelEfficiency = parseFloat(fuelEfficiencyInput.value);
-                const fuelPrice = parseFloat(fuelPriceInput.value);
-
                 if (status !== 'OK') {
                     loadingIndicator.classList.add('hidden');
                     displayMessage(`Warning: Primary route calculated, but failed to calculate the return trip. Status: ${status}. Showing one-way result.`, 'error');
-                    // Finalize with the one-way result anyway
                     finalizeTripCalculation(currentDistance, currentDuration, fuelEfficiency, fuelPrice);
                     return;
                 }
@@ -551,33 +559,30 @@
         }
 
         /**
-         * Finalizes the display of the trip calculation results.
+         * Formats and displays the final calculated results.
          */
         function finalizeTripCalculation(totalDistanceMeters, totalDurationSeconds, fuelEfficiency, fuelPrice) {
             loadingIndicator.classList.add('hidden');
 
-            // Format distance and time for display
             const distanceKm = totalDistanceMeters / 1000;
             const formattedDistance = (distanceKm).toFixed(1) + ' km';
             const formattedDuration = formatDuration(totalDurationSeconds);
 
-            // Cost Calculation
+            // Calculation: (Distance / Efficiency) * Price = Cost
             const fuelConsumedLiters = distanceKm / fuelEfficiency;
             const totalCost = fuelConsumedLiters * fuelPrice;
 
-            // 6. Update the UI
             displayDistance.textContent = formattedDistance;
             displayDuration.textContent = formattedDuration;
             displayCost.textContent = `$${totalCost.toFixed(2)}`;
 
-            // Show results
             summaryContent.classList.remove('hidden');
             resultSection.classList.remove('hidden');
         }
 
 
         /**
-         * Fetches the route details using Google Maps DirectionsService and calculates the final cost.
+         * Main function to validate inputs, build the route request, and call DirectionsService.
          */
         function calculateTripCost() {
             if (typeof google === 'undefined' || typeof google.maps === 'undefined' || !directionsService) {
@@ -585,7 +590,8 @@
                 return;
             }
 
-            displayMessage('', 'info'); // Clear messages
+            // Reset UI state
+            displayMessage('', 'info'); 
             resultSection.classList.add('hidden');
             summaryContent.classList.add('hidden');
             loadingIndicator.classList.remove('hidden');
@@ -594,51 +600,47 @@
             const fuelEfficiency = parseFloat(fuelEfficiencyInput.value);
             const fuelPrice = parseFloat(fuelPriceInput.value);
 
-            // 1. Collect all Pickup and Drop-off values
+            // Get valid, non-empty locations from inputs
             const pickupInputs = Array.from(document.querySelectorAll('.pickup-input')).map(input => input.value.trim()).filter(val => val);
             const dropoffInputs = Array.from(document.querySelectorAll('.dropoff-input')).map(input => input.value.trim()).filter(val => val);
 
-            // Basic validation: must have origin and at least one dropoff
+            // Input validation
             if (!origin || dropoffInputs.length === 0 || isNaN(fuelEfficiency) || isNaN(fuelPrice) || fuelEfficiency <= 0 || fuelPrice <= 0) {
-                displayMessage("Please ensure Start Location, at least one Drop-off, and valid Fuel inputs are provided.", 'error');
+                displayMessage("Please ensure Start Location, at least one Drop-off, and valid Fuel inputs are provided (values > 0).", 'error');
                 loadingIndicator.classList.add('hidden');
                 resultSection.classList.remove('hidden');
                 return;
             }
 
-            // 2. Determine Destination and Waypoints
-            const destination = dropoffInputs[dropoffInputs.length - 1]; // Last drop-off is the final destination
-            
-            // Intermediate waypoints: all pickups + all drop-offs EXCEPT the last one
+            // The last drop-off is the final destination for the one-way trip
+            const destination = dropoffInputs[dropoffInputs.length - 1]; 
             const intermediateDropoffs = dropoffInputs.slice(0, -1);
             
-            // The route order must be Origin -> Pickups -> Intermediate Dropoffs -> Final Dropoff
+            // All intermediate points (pickups + intermediate dropoffs) form the waypoints list
             const allIntermediateStops = [...pickupInputs, ...intermediateDropoffs];
 
             const waypoints = allIntermediateStops.map(location => ({ 
                 location: location,
-                stopover: true
+                stopover: true // Treat these as points you stop at
             }));
 
-
-            // 3. Construct the Directions API request for the primary leg
+            // Google Maps Directions Request
             const request = {
                 origin: origin,
                 destination: destination,
                 waypoints: waypoints,
-                optimizeWaypoints: false, 
+                optimizeWaypoints: false, // Use the user's order
                 travelMode: google.maps.TravelMode.DRIVING,
                 unitSystem: google.maps.UnitSystem.METRIC,
             };
 
-            // 4. Call the Directions Service for the primary leg
             directionsService.route(request, (response, status) => {
 
                 if (status !== 'OK') {
                     loadingIndicator.classList.add('hidden');
                     let errorMessage = "Could not calculate the route. Status: " + status;
                     if (status === 'ZERO_RESULTS') {
-                        errorMessage = "No route found. Please check all locations are valid and accessible.";
+                        errorMessage = "No route found. Please check all locations are valid and accessible (e.g., within Manitoba/Canada).";
                     } else if (status === 'NOT_FOUND') {
                         errorMessage = "One or more locations could not be found. Check spelling and refine addresses.";
                     } else if (status === 'OVER_QUERY_LIMIT') {
@@ -649,31 +651,29 @@
                     return;
                 }
 
-                // 5. Calculate Total Distance and Duration for the PRIMARY LEG
                 let totalDistanceMeters = 0;
                 let totalDurationSeconds = 0;
 
+                // Sum up distance and duration for all legs of the route
                 response.routes[0].legs.forEach(leg => {
                     totalDistanceMeters += leg.distance.value;
                     totalDurationSeconds += leg.duration.value;
                 });
 
                 const isRoundTrip = roundTripToggle.checked;
-                const finalDestination = destination;
-                const startOrigin = origin;
-
+                
                 if (isRoundTrip) {
-                    // If round trip is requested, calculate the return leg
-                    calculateReturnTrip(startOrigin, finalDestination, totalDistanceMeters, totalDurationSeconds);
+                    // Calculate return journey if round trip is selected
+                    calculateReturnTrip(origin, destination, totalDistanceMeters, totalDurationSeconds, fuelEfficiency, fuelPrice);
                 } else {
-                    // If not round trip, finalize calculation immediately
+                    // Finalize calculation for one-way trip
                     finalizeTripCalculation(totalDistanceMeters, totalDurationSeconds, fuelEfficiency, fuelPrice);
                 }
             });
         }
 
         /**
-         * Helper function to format duration from seconds to human-readable string.
+         * Helper function to format duration from seconds to a readable string (e.g., "1 day 5 hr 30 min").
          */
         function formatDuration(seconds) {
             const days = Math.floor(seconds / (3600 * 24));
@@ -690,7 +690,7 @@
             return parts.length > 0 ? parts.join(' ') : 'Less than a minute';
         }
 
-        // Event listeners
+        // --- Event listeners ---
         addPickupButton.addEventListener('click', addPickup);
         addDropoffButton.addEventListener('click', addDropoff);
         calculateButton.addEventListener('click', calculateTripCost);
@@ -698,8 +698,15 @@
 
         // Load Google Maps API script dynamically
         function loadMapsScript() {
+            // Check if API_KEY is available from config.js (or globally if executed in a sandbox)
+            if (typeof API_KEY === 'undefined' || API_KEY === "YOUR_API_KEY_HERE" || API_KEY === "") {
+                displayMessage("API Key missing or unset in config.js. Please update the key and try reloading.", 'error');
+                return;
+            }
+
             const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${'AIzaSyCPrjf-DCTbFEQu2Sb38YAJgROy_YvQsoI'}&libraries=places,geometry&callback=initAutocomplete`;
+            // The callback parameter 'initAutocomplete' must match the function name defined above
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places,geometry&callback=initAutocomplete`;
             script.async = true;
             script.onerror = () => {
                 displayMessage("Error loading the Google Maps API script. Check your API key or network connection.", 'error');

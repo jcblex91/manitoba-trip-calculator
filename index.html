@@ -189,104 +189,137 @@
     <!-- 1. Load the external configuration file (config.js) first -->
     <script src="config.js"></script>
     
-    <!-- 2. Firebase SDK Imports for Counter (Wrapped in DOMContentLoaded for reliability) -->
+    <!-- 2. Firebase SDK Imports for Counter (Now checks config.js first) -->
     <script type="module">
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Imports are placed inside the listener to ensure the module is fully contained
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-            import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-            import { getFirestore, doc, setDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-            // Global variables provided by the Canvas environment
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-            
-            const visitCounterBadge = document.getElementById('visit-counter-badge');
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        const visitCounterBadge = document.getElementById('visit-counter-badge');
 
-            /**
-             * The document reference for the public visit counter.
-             * Path: /artifacts/{appId}/public/data/metrics/page_visits
-             */
-            function getCounterDocRef(db) {
-                return doc(db, 
-                    `artifacts/${appId}/public/data/metrics/`, 
-                    'page_visits'
-                );
+        // --- Configuration Loading Logic ---
+        let firebaseConfig = null;
+        let configSource = 'Unknown';
+        
+        const isConfigJsDefined = typeof FIREBASE_CONFIG !== 'undefined';
+        const hasConfigJsApiKey = isConfigJsDefined && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== "YOUR_FIREBASE_API_KEY";
+
+        if (hasConfigJsApiKey) {
+            // 1. Use the user's config from config.js if it's defined and updated.
+            firebaseConfig = FIREBASE_CONFIG;
+            configSource = 'config.js (User-Provided)';
+        } else if (typeof __firebase_config !== 'undefined') {
+            // 2. Fallback to the environment variable config string if user config is missing/placeholder.
+            try {
+                firebaseConfig = JSON.parse(__firebase_config);
+                configSource = 'Runtime Environment (Fallback)';
+            } catch (e) {
+                console.error("FIREBASE ERROR: Failed to parse __firebase_config environment variable.", e);
             }
+        } else {
+             console.warn("FIREBASE WARNING: No configuration object found (config.js is missing or unset).");
+        }
+        
+        /**
+         * The document reference for the public visit counter.
+         * Path: /artifacts/{appId}/public/data/metrics/page_visits
+         */
+        function getCounterDocRef(db) {
+            return doc(db, 
+                `artifacts/${appId}/public/data/metrics/`, 
+                'page_visits'
+            );
+        }
 
-            /**
-             * Increments the visit counter in Firestore and sets up a listener 
-             * to display the real-time count.
-             */
-            async function incrementAndListen(db) {
-                const counterRef = getCounterDocRef(db);
-                const counterFieldName = 'count'; 
+        /**
+         * Increments the visit counter in Firestore and sets up a listener 
+         * to display the real-time count.
+         */
+        async function incrementAndListen(db) {
+            const counterRef = getCounterDocRef(db);
+            const counterFieldName = 'count'; 
 
-                try {
-                    // 1. Increment the counter using setDoc with merge: true 
-                    // This handles initial creation (resolves "No document to update" error)
-                    await setDoc(counterRef, {
-                        [counterFieldName]: increment(1)
-                    }, { merge: true }); 
+            try {
+                // 1. Increment the counter using setDoc with merge: true 
+                await setDoc(counterRef, {
+                    [counterFieldName]: increment(1)
+                }, { merge: true }); 
 
-                    // 2. Set up real-time listener (onSnapshot)
-                    onSnapshot(counterRef, (docSnap) => {
-                        if (docSnap.exists()) {
-                            const currentCount = docSnap.data()[counterFieldName] || 0;
-                            visitCounterBadge.textContent = `Visits: ${currentCount.toLocaleString()}`;
-                            visitCounterBadge.classList.remove('bg-indigo-100');
-                            visitCounterBadge.classList.add('bg-green-100');
-                        } else {
-                            visitCounterBadge.textContent = `Visits: 0`;
-                        }
-                    }, (error) => {
-                        console.error("Firestore Listener Error:", error);
-                        visitCounterBadge.textContent = `Visits: Fail (Listen)`;
-                        visitCounterBadge.classList.replace('bg-indigo-100', 'bg-red-100');
-                    });
-
-                } catch (e) {
-                    console.error("Firestore Increment Error:", e);
-                    visitCounterBadge.textContent = `Visits: Fail (Auth)`;
-                    visitCounterBadge.classList.replace('bg-indigo-100', 'bg-red-100');
-                }
-            }
-
-            /**
-             * Initializes Firebase, performs authentication, and starts the counter logic.
-             */
-            async function initializeAppAndCounter() {
-                try {
-                    if (!firebaseConfig.apiKey) {
-                        console.warn("Firebase configuration is missing. Visit counter will not function.");
-                        visitCounterBadge.textContent = `Visits: Config Missing`;
-                        visitCounterBadge.classList.replace('bg-indigo-100', 'bg-yellow-100');
-                        return;
-                    }
-
-                    const app = initializeApp(firebaseConfig);
-                    const db = getFirestore(app);
-                    const auth = getAuth(app);
-
-                    // Sign in
-                    if (initialAuthToken) {
-                        await signInWithCustomToken(auth, initialAuthToken);
+                // 2. Set up real-time listener (onSnapshot)
+                onSnapshot(counterRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const currentCount = docSnap.data()[counterFieldName] || 0;
+                        visitCounterBadge.textContent = `Visits: ${currentCount.toLocaleString()}`;
+                        visitCounterBadge.classList.replace('bg-indigo-100', 'bg-green-100');
                     } else {
-                        await signInAnonymously(auth);
+                        visitCounterBadge.textContent = `Visits: 0`;
                     }
-
-                    incrementAndListen(db);
-
-                } catch (error) {
-                    console.error("Firebase Initialization for Counter failed:", error);
-                    visitCounterBadge.textContent = `Visits: Init Failed`;
+                }, (error) => {
+                    console.error("FIREBASE ERROR: Firestore Listener failed.", error);
+                    visitCounterBadge.textContent = `Visits: Fail (Listen)`;
                     visitCounterBadge.classList.replace('bg-indigo-100', 'bg-red-100');
-                }
-            }
+                });
 
-            initializeAppAndCounter();
-        });
+            } catch (e) {
+                console.error("FIREBASE ERROR: Counter increment operation failed.", e);
+                visitCounterBadge.textContent = `Visits: Fail (Update)`;
+                visitCounterBadge.classList.replace('bg-indigo-100', 'bg-red-100');
+            }
+        }
+
+        /**
+         * Initializes Firebase, performs authentication, and starts the counter logic.
+         */
+        async function initializeAppAndCounter() {
+            // Wait for DOM to ensure the badge element exists
+            await new Promise(resolve => {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', resolve);
+                } else {
+                    resolve();
+                }
+            });
+
+            try {
+                // --- Final Configuration Check ---
+                if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_FIREBASE_API_KEY") {
+                    console.error("FIREBASE ERROR: Configuration key missing or is a placeholder. Cannot initialize.");
+                    visitCounterBadge.textContent = `Visits: Config Missing`;
+                    visitCounterBadge.classList.replace('bg-indigo-100', 'bg-yellow-100');
+                    // Prevent further Firebase attempts
+                    return; 
+                }
+                
+                // *** DEBUGGING STEP ADDED HERE ***
+                console.log(`[DEBUG] Firebase config source: ${configSource}`);
+                console.log(`[DEBUG] Attempting to initialize Firebase with Project ID: ${firebaseConfig.projectId}`);
+                
+                // Initialize App and Services
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+                const auth = getAuth(app);
+                
+                // Sign in
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                incrementAndListen(db);
+
+            } catch (error) {
+                console.error("FIREBASE FATAL ERROR: Initialization or Authentication failed.", error);
+                visitCounterBadge.textContent = `Visits: Init Failed`;
+                visitCounterBadge.classList.replace('bg-indigo-100', 'bg-red-100');
+            }
+        }
+
+        initializeAppAndCounter();
     </script>
 
 
@@ -803,8 +836,8 @@
         // Load Google Maps API script dynamically
         function loadMapsScript() {
             // Check if API_KEY is available from config.js (or globally if executed in a sandbox)
-            if (typeof API_KEY === 'undefined' || API_KEY === "YOUR_API_KEY_HERE" || API_KEY === "") {
-                displayMessage("API Key missing or unset in config.js. Please update the key and try reloading.", 'error');
+            if (typeof API_KEY === 'undefined' || API_KEY === "YOUR_GOOGLE_MAPS_API_KEY" || API_KEY === "") {
+                displayMessage("Google Maps API Key missing or unset in config.js. Please update the key and try reloading.", 'error');
                 return;
             }
 

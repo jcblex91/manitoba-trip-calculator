@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Stop Trip Cost Calculator</title>
+    <title>Shibu's App</title>
     <!-- Load Tailwind CSS for modern, responsive styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -37,6 +37,19 @@
         #round-trip-toggle:checked ~ .dot {
             transform: translateX(100%);
         }
+        
+        /* New custom CSS to ensure input alignment */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ensure labels have a consistent height so inputs align */
+        .input-label-container {
+            min-height: 40px; /* Adjust height based on font size and padding */
+            display: flex;
+            align-items: center;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 flex items-start md:items-center justify-center font-sans">
@@ -48,6 +61,36 @@
 
         <!-- Input Section -->
         <div id="input-section" class="space-y-6">
+            
+            <!-- Fuel Inputs (NOW ALIGNED) -->
+            <div class="grid grid-cols-2 gap-4 pb-4 border-b border-gray-200">
+                
+                <div class="input-group">
+                    <label class="block">
+                        <!-- Standardized label container height -->
+                        <div class="input-label-container">
+                            <span class="text-xs sm:text-sm font-medium text-gray-700">Fuel Efficiency (km/L or mi/gal)</span>
+                        </div>
+                        <input id="fuel-efficiency-input" type="number" min="1" placeholder="e.g., 10" value="10"
+                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                               required>
+                    </label>
+                </div>
+
+                <div class="input-group">
+                    <label class="block">
+                        <!-- Standardized label container height -->
+                         <div class="input-label-container">
+                            <span class="text-xs sm:text-sm font-medium text-gray-700">Fuel Price (per L or gal)</span>
+                        </div>
+                        <input id="fuel-price-input" type="number" min="0.01" step="0.01" placeholder="e.g., 1.50" value="1.50"
+                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                               required>
+                    </label>
+                </div>
+            </div>
+
+
             <!-- 1. Origin -->
             <div class="space-y-1">
                 <span class="text-sm font-medium text-gray-700">1. Start Location (Origin)</span>
@@ -99,25 +142,6 @@
                 </label>
             </div>
 
-            <!-- Fuel Inputs -->
-            <div class="grid grid-cols-2 gap-4 mt-6 border-t pt-4 border-gray-200">
-                <label class="block">
-                    <!-- UPDATED: Use smaller text size on mobile to prevent label wrapping -->
-                    <span class="text-xs sm:text-sm font-medium text-gray-700">Fuel Efficiency (km/L or mi/gal)</span>
-                    <input id="fuel-efficiency-input" type="number" min="1" placeholder="e.g., 10" value="10"
-                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                           required>
-                </label>
-
-                <label class="block">
-                    <!-- UPDATED: Use smaller text size on mobile to prevent label wrapping -->
-                    <span class="text-xs sm:text-sm font-medium text-gray-700">Fuel Price (per L or gal)</span>
-                    <input id="fuel-price-input" type="number" min="0.01" step="0.01" placeholder="e.g., 1.50" value="1.50"
-                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                           required>
-                </label>
-            </div>
-
             <button id="calculate-button"
                     class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition duration-150 shadow-md">
                 Calculate Total Trip Cost
@@ -157,7 +181,7 @@
     <!-- Google Maps API Script -->
     <script>
         // !! IMPORTANT: REPLACE WITH YOUR ACTUAL API KEY !!
-        const API_KEY = "AIzaSyCPrjf-DCTbFEQu2Sb38YAJgROy_YvQsoI";
+        const API_KEY = "YOUR_API_KEY_HERE";
 
         const calculateButton = document.getElementById('calculate-button');
         const addPickupButton = document.getElementById('add-pickup-button');
@@ -675,7 +699,7 @@
         // Load Google Maps API script dynamically
         function loadMapsScript() {
             const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${'AIzaSyC4ZlZggqxf0zRZRrBD3A4h_GWidIuc8c8'}&libraries=places,geometry&callback=initAutocomplete`;
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${'AIzaSyCPrjf-DCTbFEQu2Sb38YAJgROy_YvQsoI'}&libraries=places,geometry&callback=initAutocomplete`;
             script.async = true;
             script.onerror = () => {
                 displayMessage("Error loading the Google Maps API script. Check your API key or network connection.", 'error');

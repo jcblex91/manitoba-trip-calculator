@@ -3,23 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shibu's App: Multi-Stop Trip Cost Calculator</title>
+    <title>Shibu's App</title>
     <!-- Load Tailwind CSS for modern, responsive styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* --- Liquid Background Animation (Default) --- */
+        body {
+            /* Default Gradient fallback */
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            background-attachment: fixed; /* Parallax-like effect */
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            transition: background-image 0.8s ease-in-out;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Dynamic Weather Background Images --- */
+        body.weather-clear {
+            background-image: url('https://images.unsplash.com/photo-1601297183305-6df142704ea2?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover;
+            animation: none; 
+        }
+        body.weather-clouds {
+            background-image: url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover;
+            animation: none;
+        }
+        body.weather-rain, body.weather-drizzle {
+            background-image: url('https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover;
+            animation: none;
+        }
+        body.weather-snow {
+            background-image: url('https://images.unsplash.com/photo-1477601434689-19eef7b9c6d8?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover;
+            animation: none;
+        }
+        body.weather-thunderstorm {
+            background-image: url('https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover;
+            animation: none;
+            color: white; /* Ensure text visibility on dark storm backgrounds */
+        }
+        body.weather-haze, body.weather-mist {
+            background-image: url('https://images.unsplash.com/photo-1487621167305-5d248087c724?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover;
+            animation: none;
+        }
+        /* --- End Dynamic Weather Themes --- */
+
+        /* --- Liquid Glass Container Styling --- */
+        .glass-panel {
+            /* Glassmorphism Effect */
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        /* --- Material Theme Input Fields --- */
+        .material-input {
+            background-color: #ffffff; /* Solid white background */
+            border: 1px solid #cbd5e1; /* Slate-300 */
+            border-radius: 4px; /* Material standard rounded corners */
+            color: #1e293b; /* Slate-800 text */
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+            font-size: 1rem;
+        }
+        .material-input:hover {
+            border-color: #64748b; /* Darker border on hover */
+        }
+        .material-input:focus {
+            border-color: #3b82f6; /* Blue-500 on focus */
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); /* Blue focus ring */
+            outline: none;
+        }
+        .material-input::placeholder {
+            color: #94a3b8; /* Slate-400 */
+        }
+
+        /* Glass Button (Kept as Glass/Material hybrid for consistency) */
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(4px);
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.85);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
         /* Custom styles for the Google Autocomplete dropdown */
         .pac-container {
-            /* Ensure the Google Autocomplete dropdown is visible above everything */
             z-index: 10000;
-            background-color: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff; /* Solid background for dropdown */
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
         }
 
         /* Styling for the loading spinner */
         .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #3b82f6;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-left-color: #ffffff;
             border-radius: 50%;
             width: 24px;
             height: 24px;
@@ -53,35 +153,123 @@
 
         /* Stop group hover effect for drag-and-drop clarity */
         .stop-group:hover {
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* blue ring on hover */
+            background: rgba(255, 255, 255, 0.4); 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .weather-info {
+            min-width: 80px;
+            text-align: right;
+            font-size: 0.8rem;
+            color: #1f2937; /* Darker for glass contrast */
+        }
+
+        /* Ensure sufficient padding for the current location icon */
+        #origin-input {
+            padding-right: 3rem; 
+        }
+        
+        /* Button inside the input must not be part of the flow */
+        #current-location-button {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%; /* Match input height */
+        }
+
+        /* Styling for the interactive weather button */
+        .interactive-weather-btn {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            transition: all 0.2s;
+            position: relative; 
+            background: rgba(255,255,255,0.3);
+        }
+        .interactive-weather-btn:hover {
+            background-color: rgba(255,255,255,0.6); 
+            color: #1d4ed8; 
+        }
+
+        /* Custom Tooltip Styling */
+        .weather-tooltip {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            z-index: 50;
+            min-width: 150px;
+            background-color: rgba(31, 41, 55, 0.95); /* Nearly solid dark */
+            backdrop-filter: blur(4px);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-size: 0.8rem;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .interactive-weather-btn:hover .weather-tooltip,
+        .interactive-weather-btn.active .weather-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .weather-tooltip::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            right: 15px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent rgba(31, 41, 55, 0.95) transparent;
+        }
+        
+        /* Override Tailwind text colors for better contrast on glass */
+        .text-gray-700 { color: #1f2937; font-weight: 600; }
+        .text-gray-600 { color: #374151; font-weight: 500; }
+        .text-gray-500 { color: #4b5563; }
+        
+        /* Main Action Button Gradient */
+        #calculate-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            box-shadow: 0 4px 15px 0 rgba(116, 79, 168, 0.55);
+        }
+        #calculate-button:hover {
+             background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 flex items-start md:items-center justify-center font-sans">
 
-    <div class="w-full max-w-lg bg-white p-6 md:p-8 rounded-xl shadow-2xl space-y-6 mb-8">
-        <h1 class="text-3xl font-extrabold text-gray-800 text-center border-b pb-3 mb-4 flex justify-center items-center relative">
+    <!-- Replaced bg-white with glass-panel class -->
+    <div class="glass-panel w-full max-w-lg p-6 md:p-8 space-y-6 mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 text-center border-b border-gray-300/30 pb-3 mb-4 flex justify-center items-center relative">
             Shibu's App
             <!-- Visit Counter Badge -->
-            <span id="visit-counter-badge" class="absolute right-0 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded-full shadow-sm">
+            <span id="visit-counter-badge" class="absolute right-0 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-semibold bg-white/50 text-indigo-900 rounded-full shadow-sm backdrop-blur-sm">
                 Visits: Loading...
             </span>
         </h1>
-        <p class="text-sm text-gray-500 text-center">Calculate distance, time, and fuel cost for multi-stop trips within Manitoba, Canada.</p>
 
         <!-- Input Section -->
         <div id="input-section" class="space-y-6">
             
             <!-- Fuel Inputs -->
-            <div class="grid grid-cols-2 gap-4 pb-4 border-b border-gray-200">
+            <div class="grid grid-cols-2 gap-4 pb-4 border-b border-gray-300/30">
                 
                 <div class="input-group">
                     <label class="block">
                         <div class="input-label-container">
-                            <span class="text-xs sm:text-sm font-medium text-gray-700">Fuel Efficiency (km/L or mi/gal)</span>
+                            <span class="text-xs sm:text-sm text-gray-800">Fuel Efficiency (km/L or mi/gal)</span>
                         </div>
+                        <!-- Updated to material-input -->
                         <input id="fuel-efficiency-input" type="number" min="1" placeholder="e.g., 10" value="10"
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                               class="material-input block w-full px-4 py-2 rounded-lg shadow-sm"
                                required>
                     </label>
                 </div>
@@ -89,10 +277,11 @@
                 <div class="input-group">
                     <label class="block">
                          <div class="input-label-container">
-                            <span class="text-xs sm:text-sm font-medium text-gray-700">Fuel Price (per L or gal)</span>
+                            <span class="text-xs sm:text-sm text-gray-800">Fuel Price (per L or gal)</span>
                         </div>
+                        <!-- Updated to material-input -->
                         <input id="fuel-price-input" type="number" min="0.01" step="0.01" placeholder="e.g., 1.50" value="1.50"
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                               class="material-input block w-full px-4 py-2 rounded-lg shadow-sm"
                                required>
                     </label>
                 </div>
@@ -101,86 +290,113 @@
 
             <!-- 1. Origin -->
             <div class="space-y-1">
-                <span class="text-sm font-medium text-gray-700">1. Start Location (Origin)</span>
-                <div class="flex space-x-2">
+                <span class="text-sm text-gray-800 flex justify-between items-center">
+                    1. Start Location (Origin)
+                    <!-- Interactive Weather Button with Tooltip -->
+                    <button id="weather-origin-details" class="interactive-weather-btn text-gray-800 flex items-center space-x-1" 
+                            title="Hover or Click for current weather">
+                        <span>N/A</span>
+                        <!-- Tooltip Container -->
+                        <div id="weather-tooltip" class="weather-tooltip">
+                            <p id="tooltip-content">Loading weather status...</p>
+                        </div>
+                    </button>
+                </span>
+                <div class="relative"> 
+                    <!-- Updated to material-input -->
                     <input id="origin-input" type="text" placeholder="Starting point in Manitoba"
-                           class="location-input flex-grow block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                           class="material-input block w-full px-4 py-2 rounded-lg shadow-sm"
                            required>
-                    <button id="current-location-button" type="button"
-                            class="bg-blue-500 text-white p-2 rounded-lg font-semibold hover:bg-blue-600 transition duration-150 flex items-center justify-center text-sm whitespace-nowrap">
-                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        Current
+                    
+                    <!-- Current Location Button -->
+                    <button id="current-location-button" type="button" title="Use Current Location"
+                            class="absolute inset-y-0 right-0 p-2 flex items-center justify-center text-blue-700 hover:text-blue-900 transition duration-150 rounded-r-lg"
+                            style="background-color: transparent;">
+                        <!-- Crosshair Icon SVG -->
+                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="22" y1="12" x2="18" y2="12"></line>
+                            <line x1="6" y1="12" x2="2" y2="12"></line>
+                            <line x1="12" y1="6" x2="12" y2="2"></line>
+                            <line x1="12" y1="22" x2="12" y2="18"></line>
+                        </svg>
                     </button>
                 </div>
             </div>
 
             <!-- 2. Pickup Locations -->
-            <div class="space-y-3 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                <h2 class="text-lg font-bold text-yellow-800">Pickup Locations (Waypoints before Drop-offs)</h2>
+            <div class="space-y-3 p-4 bg-yellow-100/40 rounded-lg border border-yellow-200/50 backdrop-blur-sm">
+                <h2 class="text-lg font-bold text-yellow-900">Pickup Locations (Waypoints)</h2>
                 <div id="pickup-container" class="space-y-4">
                     <!-- Pickups will be added here dynamically -->
                 </div>
                 <button id="add-pickup-button" type="button"
-                        class="w-full text-yellow-600 border border-yellow-600 py-2 rounded-lg font-semibold hover:bg-yellow-100 transition duration-150">
+                        class="glass-btn w-full text-yellow-900 border border-yellow-600/30 py-2 rounded-lg font-semibold">
                     + Add Pickup Stop
                 </button>
             </div>
             
             <!-- 3. Drop-off Locations -->
-            <div class="space-y-3 p-4 bg-green-50 rounded-lg border border-green-200">
-                <h2 class="text-lg font-bold text-green-800">Drop-off Locations (Final Drop-off is last in list)</h2>
+            <div class="space-y-3 p-4 bg-green-100/40 rounded-lg border border-green-200/50 backdrop-blur-sm">
+                <h2 class="text-lg font-bold text-green-900">Drop-off Locations (Final)</h2>
                 <div id="dropoff-container" class="space-y-4">
                     <!-- Drop-offs will be added here dynamically (Default added in JS) -->
                 </div>
                 <button id="add-dropoff-button" type="button"
-                        class="w-full text-green-600 border border-green-600 py-2 rounded-lg font-semibold hover:bg-green-100 transition duration-150">
+                        class="glass-btn w-full text-green-900 border border-green-600/30 py-2 rounded-lg font-semibold">
                     + Add Drop-off Stop
                 </button>
             </div>
 
             <!-- Round Trip Toggle -->
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg shadow-inner">
-                <span class="text-base font-semibold text-gray-700">Calculate Round Trip (Return to Start)?</span>
+            <div class="flex items-center justify-between p-3 bg-white/30 rounded-lg shadow-sm border border-white/20">
+                <span class="text-base font-semibold text-gray-800">Calculate Round Trip?</span>
                 <label for="round-trip-toggle" class="flex items-center cursor-pointer">
                     <div class="relative">
                         <input id="round-trip-toggle" type="checkbox" class="sr-only" checked>
-                        <div class="block bg-gray-300 w-14 h-8 rounded-full transition duration-300"></div>
+                        <div class="block bg-gray-400 w-14 h-8 rounded-full transition duration-300"></div>
                         <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition duration-300 shadow-md"></div>
                     </div>
                 </label>
             </div>
 
             <button id="calculate-button"
-                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition duration-150 shadow-md">
+                    class="w-full text-white py-3 rounded-lg font-bold text-lg shadow-lg transform transition hover:scale-[1.02]">
                 Calculate Total Trip Cost
             </button>
         </div>
 
         <!-- Result Section -->
-        <div id="result-section" class="hidden mt-6 pt-4 border-t border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Trip Summary</h2>
+        <div id="result-section" class="hidden mt-6 pt-4 border-t border-gray-300/30">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 text-center">Trip Summary</h2>
             <div id="loading-indicator" class="flex justify-center items-center space-x-2 hidden">
                 <div class="spinner"></div>
-                <p class="text-blue-600">Calculating route and distance...</p>
+                <p class="text-white font-semibold shadow-black drop-shadow-md">Calculating route...</p>
             </div>
 
             <div id="summary-content" class="space-y-3">
-                <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg shadow-sm">
-                    <span class="font-semibold text-gray-600">Total Distance:</span>
-                    <span id="display-distance" class="font-bold text-blue-600">--</span>
+                <!-- NEW: Distance to First Stop -->
+                <div class="flex justify-between items-center p-3 bg-indigo-100/60 rounded-lg shadow-sm border border-indigo-200 backdrop-blur-sm">
+                    <span class="font-semibold text-indigo-900">Distance to First Stop:</span>
+                    <span id="display-first-stop-distance" class="font-bold text-indigo-800">--</span>
                 </div>
-                <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg shadow-sm">
-                    <span class="font-semibold text-gray-600">Estimated Travel Time:</span>
-                    <span id="display-duration" class="font-bold text-blue-600">--</span>
+                
+                <div class="flex justify-between items-center p-3 bg-blue-100/60 rounded-lg shadow-sm border border-blue-200 backdrop-blur-sm">
+                    <span class="font-semibold text-blue-900">Total Distance:</span>
+                    <span id="display-distance" class="font-bold text-blue-800">--</span>
                 </div>
-                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg shadow-lg border-2 border-green-400">
-                    <span class="font-extrabold text-gray-700 text-lg">Estimated Fuel Cost:</span>
-                    <span id="display-cost" class="font-extrabold text-green-700 text-2xl">--</span>
+                <div class="flex justify-between items-center p-3 bg-blue-100/60 rounded-lg shadow-sm border border-blue-200 backdrop-blur-sm">
+                    <span class="font-semibold text-blue-900">Estimated Travel Time:</span>
+                    <span id="display-duration" class="font-bold text-blue-800">--</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-green-100/70 rounded-lg shadow-lg border border-green-300 backdrop-blur-sm">
+                    <span class="font-extrabold text-green-900 text-lg">Estimated Fuel Cost:</span>
+                    <span id="display-cost" class="font-extrabold text-green-800 text-2xl">--</span>
                 </div>
             </div>
 
              <!-- Error/Message Box -->
-            <div id="message-box" class="mt-4 p-3 bg-red-100 text-red-700 rounded-lg hidden" role="alert">
+            <div id="message-box" class="mt-4 p-3 bg-red-100/80 text-red-800 rounded-lg hidden border border-red-200" role="alert">
                 An error occurred. Please check your locations and API key usage.
             </div>
         </div>
@@ -254,20 +470,22 @@
                     if (docSnap.exists()) {
                         const currentCount = docSnap.data()[counterFieldName] || 0;
                         visitCounterBadge.textContent = `Visits: ${currentCount.toLocaleString()}`;
-                        visitCounterBadge.classList.replace('bg-indigo-100', 'bg-green-100');
+                        // Updated for glass theme compatibility
+                        visitCounterBadge.classList.remove('bg-white/50', 'text-indigo-900');
+                        visitCounterBadge.classList.add('bg-green-100/60', 'text-green-900');
                     } else {
                         visitCounterBadge.textContent = `Visits: 0`;
                     }
                 }, (error) => {
                     console.error("FIREBASE ERROR: Firestore Listener failed.", error);
                     visitCounterBadge.textContent = `Visits: Fail (Listen)`;
-                    visitCounterBadge.classList.replace('bg-indigo-100', 'bg-red-100');
+                    visitCounterBadge.classList.replace('bg-white/50', 'bg-red-100/60');
                 });
 
             } catch (e) {
                 console.error("FIREBASE ERROR: Counter increment operation failed.", e);
                 visitCounterBadge.textContent = `Visits: Fail (Update)`;
-                visitCounterBadge.classList.replace('bg-indigo-100', 'bg-red-100');
+                visitCounterBadge.classList.replace('bg-white/50', 'bg-red-100/60');
             }
         }
 
@@ -289,14 +507,10 @@
                 if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_FIREBASE_API_KEY") {
                     console.error("FIREBASE ERROR: Configuration key missing or is a placeholder. Cannot initialize.");
                     visitCounterBadge.textContent = `Visits: Config Missing`;
-                    visitCounterBadge.classList.replace('bg-indigo-100', 'bg-yellow-100');
+                    visitCounterBadge.classList.replace('bg-white/50', 'bg-yellow-100/60');
                     // Prevent further Firebase attempts
                     return; 
                 }
-                
-                // *** DEBUGGING STEP ADDED HERE ***
-                console.log(`[DEBUG] Firebase config source: ${configSource}`);
-                console.log(`[DEBUG] Attempting to initialize Firebase with Project ID: ${firebaseConfig.projectId}`);
                 
                 // Initialize App and Services
                 const app = initializeApp(firebaseConfig);
@@ -315,7 +529,7 @@
             } catch (error) {
                 console.error("FIREBASE FATAL ERROR: Initialization or Authentication failed.", error);
                 visitCounterBadge.textContent = `Visits: Init Failed`;
-                visitCounterBadge.classList.replace('bg-indigo-100', 'bg-red-100');
+                visitCounterBadge.classList.replace('bg-white/50', 'bg-red-100/60');
             }
         }
 
@@ -323,7 +537,7 @@
     </script>
 
 
-    <!-- 3. Main Application Script (Google Maps Logic) -->
+    <!-- 3. Main Application Script (Google Maps & Weather Logic) -->
     <script>
         // Check for required API_KEY constant from config.js
         if (typeof API_KEY === 'undefined') {
@@ -334,17 +548,27 @@
                 errorBox.textContent = "FATAL ERROR: 'API_KEY' not found. Please ensure config.js is loaded correctly and defines const API_KEY.";
             });
         }
+
+        // Check for WEATHER_API_KEY constant from config.js
+        if (typeof WEATHER_API_KEY === 'undefined' || WEATHER_API_KEY === "YOUR_OPENWEATHERMAP_API_KEY") {
+            console.warn("OpenWeatherMap API Key is missing or unset. Basic weather icon/temp features will be limited or unavailable.");
+        }
         
         // --- DOM Element References ---
         const calculateButton = document.getElementById('calculate-button');
         const addPickupButton = document.getElementById('add-pickup-button');
         const addDropoffButton = document.getElementById('add-dropoff-button');
-        const currentLocationButton = document.getElementById('current-location-button');
+        // Updated reference: Now points to the icon button inside the input group
+        const currentLocationButton = document.getElementById('current-location-button'); 
         const roundTripToggle = document.getElementById('round-trip-toggle'); 
         
         const originInput = document.getElementById('origin-input');
         const pickupContainer = document.getElementById('pickup-container');
         const dropoffContainer = document.getElementById('dropoff-container');
+        const weatherOriginDetails = document.getElementById('weather-origin-details');
+        const weatherTooltip = document.getElementById('weather-tooltip');
+        const tooltipContent = document.getElementById('tooltip-content');
+
 
         const fuelEfficiencyInput = document.getElementById('fuel-efficiency-input');
         const fuelPriceInput = document.getElementById('fuel-price-input');
@@ -352,6 +576,7 @@
         const resultSection = document.getElementById('result-section');
         const loadingIndicator = document.getElementById('loading-indicator');
         const summaryContent = document.getElementById('summary-content');
+        const displayFirstStopDistance = document.getElementById('display-first-stop-distance'); // NEW REF
         const displayDistance = document.getElementById('display-distance');
         const displayDuration = document.getElementById('display-duration');
         const displayCost = document.getElementById('display-cost');
@@ -362,99 +587,22 @@
         let uniqueIdCounter = 0; 
         
         // --- Manitoba Restriction Constants ---
-        // Coordinates defining the bounding box for Manitoba, Canada
         const MANITOBA_NE = { lat: 60.0, lng: -88.0 }; 
         const MANITOBA_SW = { lat: 49.0, lng: -102.0 }; 
         const CANADA_RESTRICTION = { country: 'ca' };
         // --- End Restriction Constants ---
-
-
-        // --- Drag and Drop State and Handlers ---
-        let dragSrcEl = null;
-
-        function handleDragStart(e) {
-            this.style.opacity = '0.4'; 
-            dragSrcEl = this;
-            e.dataTransfer.effectAllowed = 'move';
-            // Store the stop type to prevent mixing pickup and dropoff lists
-            e.dataTransfer.setData('text/plain', this.getAttribute('data-stop-type')); 
-        }
-
-        function handleDragEnd(e) {
-            this.style.opacity = '1';
-            // Clean up any drag styling
-            document.querySelectorAll('.stop-group').forEach(item => {
-                item.classList.remove('border-blue-400', 'border-2', 'border-dashed', 'bg-blue-50');
-            });
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault(); 
-            e.dataTransfer.dropEffect = 'move';
-            return false;
-        }
-
-        function handleDragEnter(e) {
-            const sourceType = dragSrcEl.getAttribute('data-stop-type');
-            const targetType = this.getAttribute('data-stop-type');
-
-            // Only highlight if the drag source and target are in the same list type
-            if (dragSrcEl !== this && sourceType === targetType) {
-                 this.classList.add('border-blue-400', 'border-2', 'border-dashed', 'bg-blue-50');
-            }
-        }
-
-        function handleDragLeave(e) {
-            this.classList.remove('border-blue-400', 'border-2', 'border-dashed', 'bg-blue-50');
-        }
-
-        function handleDrop(e) {
-            e.stopPropagation();
-            
-            this.classList.remove('border-blue-400', 'border-2', 'border-dashed', 'bg-blue-50');
-
-            if (dragSrcEl !== this) {
-                const sourceType = dragSrcEl.getAttribute('data-stop-type');
-                const targetType = this.getAttribute('data-stop-type');
-
-                if (sourceType === targetType) {
-                    // Perform the actual DOM manipulation to reorder the element
-                    const targetContainer = this.parentNode;
-                    // Insert the dragged element before the element it was dropped on
-                    targetContainer.insertBefore(dragSrcEl, this);
-                    relabelStops();
-                } else {
-                    displayMessage(`Cannot move a ${sourceType} stop into the ${targetType} section.`, 'error');
-                }
-            }
-            return false;
-        }
-
-        /**
-         * Attaches all necessary drag-and-drop event listeners to a stop element.
-         */
-        function setupDragAndDrop(element) {
-            element.addEventListener('dragstart', handleDragStart);
-            element.addEventListener('dragenter', handleDragEnter);
-            element.addEventListener('dragover', handleDragOver);
-            element.addEventListener('dragleave', handleDragLeave);
-            element.addEventListener('drop', handleDrop);
-            element.addEventListener('dragend', handleDragEnd);
-        }
-        // --- End Drag and Drop ---
-
-
+        
         /**
          * Clears and displays a temporary message in the message box.
          */
         function displayMessage(text, type = 'error') {
             messageBox.textContent = text;
-            messageBox.className = 'mt-4 p-3 rounded-lg hidden'; // Reset classes
+            messageBox.className = 'mt-4 p-3 rounded-lg hidden border border-red-200'; // Reset classes
             
             if (type === 'error') {
-                messageBox.classList.add('bg-red-100', 'text-red-700', 'shadow-md');
+                messageBox.classList.add('bg-red-100/80', 'text-red-800', 'shadow-md');
             } else if (type === 'info') {
-                messageBox.classList.add('bg-blue-100', 'text-blue-700');
+                messageBox.classList.add('bg-blue-100/80', 'text-blue-800');
             }
             messageBox.classList.remove('hidden');
 
@@ -463,12 +611,137 @@
                  setTimeout(() => messageBox.classList.add('hidden'), 3000);
             }
         }
+        
+        /**
+         * Applies a dynamic theme class to the body based on the weather condition.
+         */
+        function applyWeatherTheme(condition) {
+            const body = document.body;
+            
+            // 1. Remove all existing weather theme classes
+            const themes = ['weather-clear', 'weather-clouds', 'weather-rain', 'weather-snow', 'weather-thunderstorm', 'weather-haze', 'weather-mist'];
+            themes.forEach(theme => body.classList.remove(theme));
+
+            // 2. Map condition string to CSS class
+            const normalizedCondition = condition.toLowerCase();
+
+            if (normalizedCondition.includes('clear')) {
+                body.classList.add('weather-clear');
+            } else if (normalizedCondition.includes('cloud')) {
+                body.classList.add('weather-clouds');
+            } else if (normalizedCondition.includes('rain') || normalizedCondition.includes('drizzle')) {
+                body.classList.add('weather-rain');
+            } else if (normalizedCondition.includes('snow')) {
+                body.classList.add('weather-snow');
+            } else if (normalizedCondition.includes('thunderstorm')) {
+                body.classList.add('weather-thunderstorm');
+            } else if (normalizedCondition.includes('haze')) {
+                body.classList.add('weather-haze');
+            } else if (normalizedCondition.includes('mist')) {
+                body.classList.add('weather-mist');
+            }
+            // If no match, it keeps the default gradient
+        }
+
+        /**
+         * Fetches basic weather data for a given location string and updates the interactive button.
+         * The function first geocodes the address to get coordinates.
+         */
+        async function fetchWeather(location, displayElement, isOrigin = false) {
+            
+            // Check if API key is valid
+            if (typeof WEATHER_API_KEY === 'undefined' || WEATHER_API_KEY === "YOUR_OPENWEATHERMAP_API_KEY") {
+                displayElement.innerHTML = `<span>N/A</span>`;
+                if (isOrigin) {
+                    tooltipContent.textContent = "Weather API Key is missing or invalid. Cannot fetch live data.";
+                }
+                return;
+            }
+            
+            if (!location || !geocoder) return;
+
+            displayElement.innerHTML = `<div class="spinner w-3 h-3"></div>`;
+            displayElement.disabled = true;
+            if (isOrigin) {
+                tooltipContent.textContent = "Fetching location coordinates...";
+            }
+
+            try {
+                // 1. Geocode the address to get Lat/Lng
+                const geoResult = await new Promise((resolve, reject) => {
+                    geocoder.geocode({ address: location }, (results, status) => {
+                        if (status === 'OK' && results[0]) {
+                            resolve(results[0].geometry.location);
+                        } else {
+                            reject(new Error(`Geocoding failed for ${location}: ${status}`));
+                        }
+                    });
+                });
+
+                const lat = geoResult.lat();
+                const lon = geoResult.lng();
+                if (isOrigin) {
+                    tooltipContent.textContent = "Fetching weather data...";
+                }
+
+
+                // 2. Fetch current weather from OpenWeatherMap
+                const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${WEATHER_API_KEY}`;
+                
+                const response = await fetch(weatherUrl);
+                if (!response.ok) {
+                    throw new Error(`Weather API returned status ${response.status}`);
+                }
+                const data = await response.json();
+                
+                displayElement.disabled = false;
+
+                // 3. Update the display element and tooltip
+                if (data.main && data.weather && data.weather.length > 0) {
+                    const temp = Math.round(data.main.temp);
+                    const iconCode = data.weather[0].icon;
+                    const description = data.weather[0].description;
+                    const mainCondition = data.weather[0].main;
+                    const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+                    
+                    const weatherHtml = `
+                        <img src="${iconUrl}" alt="${mainCondition}" class="w-6 h-6 inline-block -my-1" 
+                            onerror="this.onerror=null;this.src='https://placehold.co/24x24/cccccc/333333?text=W'">
+                        <span>${temp}°C</span>
+                    `;
+
+                    displayElement.innerHTML = weatherHtml;
+
+                    if (isOrigin) {
+                        tooltipContent.innerHTML = `
+                            <strong>${mainCondition}</strong><br>
+                            ${description.charAt(0).toUpperCase() + description.slice(1)}<br>
+                            Temp: ${temp}°C | Wind: ${Math.round(data.wind.speed * 3.6)} km/h
+                        `;
+                        // --- Apply theme based on Origin weather ---
+                        applyWeatherTheme(mainCondition);
+                    }
+                    
+                } else {
+                    throw new Error("Invalid weather data structure.");
+                }
+
+            } catch (error) {
+                console.error("Basic weather fetch error:", error);
+                displayElement.disabled = false;
+                displayElement.innerHTML = `<span>N/A</span>`;
+                if (isOrigin) {
+                    tooltipContent.textContent = "Failed to load weather details. Check console for errors.";
+                }
+            }
+        }
+
 
         /**
          * Initializes Google Maps Autocomplete for a specific input field,
          * restricting searches to Canada and providing a bias towards Manitoba.
          */
-        function initializeAutocompleteForInput(inputElement) {
+        function initializeAutocompleteForInput(inputElement, isOrigin = false, weatherDisplayElement = null) {
             if (typeof google === 'undefined' || typeof google.maps === 'undefined' || !inputElement) {
                  return;
             }
@@ -483,7 +756,22 @@
                 bounds: manitobaBounds, 
             };
 
-            new google.maps.places.Autocomplete(inputElement, autocompleteOptions);
+            const autocomplete = new google.maps.places.Autocomplete(inputElement, autocompleteOptions);
+
+            // Fetch weather when the user finishes entering the address (blur event)
+            inputElement.addEventListener('blur', () => {
+                const locationValue = inputElement.value.trim();
+                if (locationValue && weatherDisplayElement) {
+                    // Pass isOrigin=true if initializing for the origin input
+                    fetchWeather(locationValue, weatherDisplayElement, isOrigin); 
+                }
+            });
+            
+            // Initial weather fetch on load if the input has a value
+            if (inputElement.value.trim() && weatherDisplayElement) {
+                // Pass isOrigin=true if initializing for the origin input
+                fetchWeather(inputElement.value, weatherDisplayElement, isOrigin); 
+            }
         }
 
         /**
@@ -500,10 +788,15 @@
             geocoder = new google.maps.Geocoder(); 
             
             // Initialize autocomplete for the origin input
-            initializeAutocompleteForInput(originInput);
+            initializeAutocompleteForInput(originInput, true, weatherOriginDetails);
             
             // Initialize autocompletes for any existing dynamic stops (if any)
-            document.querySelectorAll('.pickup-input, .dropoff-input').forEach(initializeAutocompleteForInput);
+            document.querySelectorAll('.stop-group').forEach(group => {
+                const input = group.querySelector('.location-input');
+                const weatherSpan = group.querySelector('.weather-info');
+                // Pass 'false' for all stop waypoints
+                initializeAutocompleteForInput(input, false, weatherSpan); 
+            });
             
             // Ensure there is at least one input for pickup and drop-off to start
             if (pickupContainer.children.length === 0) {
@@ -533,8 +826,8 @@
 
             // Show loading state on the button
             currentLocationButton.disabled = true;
-            const originalText = currentLocationButton.innerHTML;
-            currentLocationButton.innerHTML = `<div class="spinner w-4 h-4 mr-2"></div> Finding...`;
+            // Spinner inside icon area
+            currentLocationButton.innerHTML = `<div class="spinner w-4 h-4 text-blue-800"></div>`; 
 
             navigator.geolocation.getCurrentPosition((position) => {
                 const latlng = {
@@ -545,11 +838,14 @@
                 // Reverse geocoding to get a readable address
                 geocoder.geocode({ location: latlng }, (results, status) => {
                     currentLocationButton.disabled = false;
-                    currentLocationButton.innerHTML = originalText;
+                    // Restore original icon state (Crosshair)
+                    currentLocationButton.innerHTML = `<svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>`;
 
                     if (status === 'OK' && results[0]) {
                         originInput.value = results[0].formatted_address;
                         displayMessage("Current location set!", 'info');
+                        // Fetch weather for the new location and apply theme (isOrigin=true)
+                        fetchWeather(originInput.value, weatherOriginDetails, true);
                     } else {
                         // Fallback to coordinates if reverse geocoding fails
                         originInput.value = `${latlng.lat}, ${latlng.lng}`;
@@ -559,7 +855,8 @@
             }, (error) => {
                 // Handle geolocation errors
                 currentLocationButton.disabled = false;
-                currentLocationButton.innerHTML = originalText;
+                // Restore original icon state (Crosshair)
+                currentLocationButton.innerHTML = `<svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>`;
 
                 let errorMessage = "Geolocation failed: ";
                 switch(error.code) {
@@ -589,6 +886,7 @@
             const newStopId = `${type}-input-${uniqueIdCounter}`;
             
             const stopDiv = document.createElement('div');
+            // Added padding-t-4 for spacing the weather info from the stop label above it
             stopDiv.className = 'flex space-x-2 stop-group p-2 rounded-lg shadow-sm border border-gray-200 cursor-move bg-white transition duration-150 ease-in-out';
             stopDiv.setAttribute('draggable', 'true');
             stopDiv.setAttribute('data-stop-type', type);
@@ -600,9 +898,13 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </div>
                 <label class="block flex-grow">
-                    <span class="text-sm font-medium text-gray-700 stop-label"></span>
+                    <span class="text-sm font-medium text-gray-700 stop-label flex justify-between items-center">
+                        <!-- Label text is set by relabelStops -->
+                        <span class="label-text"></span>
+                        <span class="weather-info">N/A</span>
+                    </span>
                     <input id="${newStopId}" type="text" placeholder="${placeholder}"
-                           class="${type}-input location-input block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                           class="${type}-input location-input glass-input block w-full px-4 py-2 rounded-lg shadow-sm">
                 </label>
                 <button type="button" class="remove-stop-button self-end bg-red-500 text-white p-2 rounded-lg h-[40px] w-[40px] hover:bg-red-600 transition duration-150 flex items-center justify-center text-xl leading-none" aria-label="Remove Stop">
                     &times;
@@ -610,9 +912,15 @@
             `;
 
             container.appendChild(stopDiv);
+            
+            // Get references to the dynamically created elements
+            const inputElement = document.getElementById(newStopId);
+            const weatherSpan = stopDiv.querySelector('.weather-info');
+
             // Wait for the script to load before trying to init Autocomplete
             if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
-                initializeAutocompleteForInput(document.getElementById(newStopId));
+                // Pass 'false' for all stop waypoints
+                initializeAutocompleteForInput(inputElement, false, weatherSpan);
             }
             
             relabelStops();
@@ -646,7 +954,7 @@
         function relabelStops() {
             const pickupGroups = pickupContainer.querySelectorAll('.stop-group');
             pickupGroups.forEach((group, index) => {
-                const labelSpan = group.querySelector('.stop-label');
+                const labelSpan = group.querySelector('.label-text');
                 if (labelSpan) {
                     labelSpan.textContent = `Pickup ${index + 1}`;
                 }
@@ -656,7 +964,7 @@
             const totalDropoffs = dropoffGroups.length;
 
             dropoffGroups.forEach((group, index) => {
-                const labelSpan = group.querySelector('.stop-label');
+                const labelSpan = group.querySelector('.label-text');
                 if (labelSpan) {
                     const isFinal = (index === totalDropoffs - 1);
                     labelSpan.textContent = `Drop-off ${index + 1} ${isFinal ? '(Final Destination)' : ''}`;
@@ -664,12 +972,78 @@
             });
         }
 
+        // --- Drag and Drop State and Handlers ---
+        let dragSrcEl = null;
+
+        function handleDragStart(e) {
+            this.style.opacity = '0.4'; 
+            dragSrcEl = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.getAttribute('data-stop-type')); 
+        }
+
+        function handleDragEnd(e) {
+            this.style.opacity = '1';
+            document.querySelectorAll('.stop-group').forEach(item => {
+                item.classList.remove('border-blue-400', 'border-2', 'border-dashed', 'bg-blue-50');
+            });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault(); 
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            const sourceType = dragSrcEl.getAttribute('data-stop-type');
+            const targetType = this.getAttribute('data-stop-type');
+
+            if (dragSrcEl !== this && sourceType === targetType) {
+                 this.classList.add('border-blue-400', 'border-2', 'border-dashed', 'bg-blue-50');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('border-blue-400', 'border-2', 'border-dashed', 'bg-blue-50');
+        }
+
+        function handleDrop(e) {
+            e.stopPropagation();
+            
+            this.classList.remove('border-blue-400', 'border-2', 'border-dashed', 'bg-blue-50');
+
+            if (dragSrcEl !== this) {
+                const sourceType = dragSrcEl.getAttribute('data-stop-type');
+                const targetType = this.getAttribute('data-stop-type');
+
+                if (sourceType === targetType) {
+                    const targetContainer = this.parentNode;
+                    targetContainer.insertBefore(dragSrcEl, this);
+                    relabelStops();
+                } else {
+                    displayMessage(`Cannot move a ${sourceType} stop into the ${targetType} section.`, 'error');
+                }
+            }
+            return false;
+        }
+
+        function setupDragAndDrop(element) {
+            element.addEventListener('dragstart', handleDragStart);
+            element.addEventListener('dragenter', handleDragEnter);
+            element.addEventListener('dragover', handleDragOver);
+            element.addEventListener('dragleave', handleDragLeave);
+            element.addEventListener('drop', handleDrop);
+            element.addEventListener('dragend', handleDragEnd);
+        }
+        // --- End Drag and Drop ---
+
 
         /**
          * Calculates the return trip from the final destination back to the origin,
          * and adds its distance/duration to the running total.
          */
-        function calculateReturnTrip(origin, destination, currentDistance, currentDuration, fuelEfficiency, fuelPrice) {
+        function calculateReturnTrip(origin, destination, currentDistance, currentDuration, fuelEfficiency, fuelPrice, distanceToFirstStopMeters) {
             const returnRequest = {
                 origin: destination,
                 destination: origin,
@@ -681,7 +1055,8 @@
                 if (status !== 'OK') {
                     loadingIndicator.classList.add('hidden');
                     displayMessage(`Warning: Primary route calculated, but failed to calculate the return trip. Status: ${status}. Showing one-way result.`, 'error');
-                    finalizeTripCalculation(currentDistance, currentDuration, fuelEfficiency, fuelPrice);
+                    // Still finalize the calculation using the one-way distance/duration
+                    finalizeTripCalculation(currentDistance, currentDuration, fuelEfficiency, fuelPrice, distanceToFirstStopMeters);
                     return;
                 }
 
@@ -691,30 +1066,57 @@
                 const finalDistance = currentDistance + returnLegDistance;
                 const finalDuration = currentDuration + returnLegDuration;
 
-                finalizeTripCalculation(finalDistance, finalDuration, fuelEfficiency, fuelPrice);
+                finalizeTripCalculation(finalDistance, finalDuration, fuelEfficiency, fuelPrice, distanceToFirstStopMeters);
             });
         }
 
         /**
          * Formats and displays the final calculated results.
          */
-        function finalizeTripCalculation(totalDistanceMeters, totalDurationSeconds, fuelEfficiency, fuelPrice) {
+        function finalizeTripCalculation(totalDistanceMeters, totalDurationSeconds, fuelEfficiency, fuelPrice, distanceToFirstStopMeters) {
             loadingIndicator.classList.add('hidden');
 
             const distanceKm = totalDistanceMeters / 1000;
-            const formattedDistance = (distanceKm).toFixed(1) + ' km';
+            const distanceToFirstStopKm = distanceToFirstStopMeters / 1000;
+            
+            const formattedTotalDistance = (distanceKm).toFixed(1) + ' km';
+            const formattedFirstStopDistance = (distanceToFirstStopKm).toFixed(1) + ' km';
             const formattedDuration = formatDuration(totalDurationSeconds);
 
             // Calculation: (Distance / Efficiency) * Price = Cost
             const fuelConsumedLiters = distanceKm / fuelEfficiency;
+            // FIX: Correctly initialize totalCost using the calculated consumption and price
             const totalCost = fuelConsumedLiters * fuelPrice;
 
-            displayDistance.textContent = formattedDistance;
+            displayFirstStopDistance.textContent = formattedFirstStopDistance; // NEW DISPLAY
+            displayDistance.textContent = formattedTotalDistance;
             displayDuration.textContent = formattedDuration;
-            displayCost.textContent = `$${totalCost.toFixed(2)}`;
+            displayCost.textContent = `$${totalCost.toFixed(2)}`; // Use the calculated totalCost here
 
             summaryContent.classList.remove('hidden');
             resultSection.classList.remove('hidden');
+        }
+        
+        /**
+         * Calculates the distance from the origin to the first actual stop.
+         */
+        function calculateDistanceToFirstStop(origin, firstStopLocation, callback) {
+            const request = {
+                origin: origin,
+                destination: firstStopLocation,
+                travelMode: google.maps.TravelMode.DRIVING,
+                unitSystem: google.maps.UnitSystem.METRIC,
+            };
+
+            directionsService.route(request, (response, status) => {
+                if (status === 'OK') {
+                    const distanceMeters = response.routes[0].legs[0].distance.value;
+                    callback(distanceMeters);
+                } else {
+                    console.error("Failed to calculate distance to first stop. Status: " + status);
+                    callback(0); // Pass 0 if calculation fails
+                }
+            });
         }
 
 
@@ -740,72 +1142,73 @@
             // Get valid, non-empty locations from inputs
             const pickupInputs = Array.from(document.querySelectorAll('.pickup-input')).map(input => input.value.trim()).filter(val => val);
             const dropoffInputs = Array.from(document.querySelectorAll('.dropoff-input')).map(input => input.value.trim()).filter(val => val);
+            
+            const allStopLocations = [...pickupInputs, ...dropoffInputs];
 
             // Input validation
-            if (!origin || dropoffInputs.length === 0 || isNaN(fuelEfficiency) || isNaN(fuelPrice) || fuelEfficiency <= 0 || fuelPrice <= 0) {
-                displayMessage("Please ensure Start Location, at least one Drop-off, and valid Fuel inputs are provided (values > 0).", 'error');
+            if (!origin || allStopLocations.length === 0 || isNaN(fuelEfficiency) || isNaN(fuelPrice) || fuelEfficiency <= 0 || fuelPrice <= 0) {
+                displayMessage("Please ensure Start Location, at least one Stop, and valid Fuel inputs are provided (values > 0).", 'error');
                 loadingIndicator.classList.add('hidden');
                 resultSection.classList.remove('hidden');
                 return;
             }
 
-            // The last drop-off is the final destination for the one-way trip
-            const destination = dropoffInputs[dropoffInputs.length - 1]; 
-            const intermediateDropoffs = dropoffInputs.slice(0, -1);
-            
-            // All intermediate points (pickups + intermediate dropoffs) form the waypoints list
-            const allIntermediateStops = [...pickupInputs, ...intermediateDropoffs];
+            const destination = allStopLocations[allStopLocations.length - 1]; 
+            const intermediateWaypoints = allStopLocations.slice(0, -1);
+            const firstStopLocation = allStopLocations[0]; // The location for the new metric
 
-            const waypoints = allIntermediateStops.map(location => ({ 
+            const waypoints = intermediateWaypoints.map(location => ({ 
                 location: location,
-                stopover: true // Treat these as points you stop at
+                stopover: true 
             }));
 
-            // Google Maps Directions Request
-            const request = {
-                origin: origin,
-                destination: destination,
-                waypoints: waypoints,
-                optimizeWaypoints: false, // Use the user's order
-                travelMode: google.maps.TravelMode.DRIVING,
-                unitSystem: google.maps.UnitSystem.METRIC,
-            };
+            let distanceToFirstStopMeters = 0;
 
-            directionsService.route(request, (response, status) => {
-
-                if (status !== 'OK') {
-                    loadingIndicator.classList.add('hidden');
-                    let errorMessage = "Could not calculate the route. Status: " + status;
-                    if (status === 'ZERO_RESULTS') {
-                        errorMessage = "No route found. Please check all locations are valid and accessible (e.g., within Manitoba/Canada).";
-                    } else if (status === 'NOT_FOUND') {
-                        errorMessage = "One or more locations could not be found. Check spelling and refine addresses.";
-                    } else if (status === 'OVER_QUERY_LIMIT') {
-                        errorMessage = "API Query Limit exceeded. Please check your Google Maps billing and usage.";
-                    }
-                    displayMessage(errorMessage, 'error');
-                    resultSection.classList.remove('hidden');
-                    return;
-                }
-
-                let totalDistanceMeters = 0;
-                let totalDurationSeconds = 0;
-
-                // Sum up distance and duration for all legs of the route
-                response.routes[0].legs.forEach(leg => {
-                    totalDistanceMeters += leg.distance.value;
-                    totalDurationSeconds += leg.duration.value;
-                });
-
-                const isRoundTrip = roundTripToggle.checked;
+            // 1. Calculate Distance to First Stop (Async call)
+            calculateDistanceToFirstStop(origin, firstStopLocation, (distance) => {
+                distanceToFirstStopMeters = distance;
                 
-                if (isRoundTrip) {
-                    // Calculate return journey if round trip is selected
-                    calculateReturnTrip(origin, destination, totalDistanceMeters, totalDurationSeconds, fuelEfficiency, fuelPrice);
-                } else {
-                    // Finalize calculation for one-way trip
-                    finalizeTripCalculation(totalDistanceMeters, totalDurationSeconds, fuelEfficiency, fuelPrice);
-                }
+                // 2. Calculate Full Trip (Async call, inside the callback)
+                const fullTripRequest = {
+                    origin: origin,
+                    destination: destination,
+                    waypoints: waypoints,
+                    optimizeWaypoints: false, 
+                    travelMode: google.maps.TravelMode.DRIVING,
+                    unitSystem: google.maps.UnitSystem.METRIC,
+                };
+
+                directionsService.route(fullTripRequest, (response, status) => {
+
+                    if (status !== 'OK') {
+                        loadingIndicator.classList.add('hidden');
+                        let errorMessage = "Could not calculate the full route. Status: " + status;
+                        if (status === 'ZERO_RESULTS') {
+                            errorMessage = "No route found. Please check all locations are valid.";
+                        } 
+                        displayMessage(errorMessage, 'error');
+                        resultSection.classList.remove('hidden');
+                        return;
+                    }
+
+                    let totalDistanceMeters = 0;
+                    let totalDurationSeconds = 0;
+
+                    response.routes[0].legs.forEach(leg => {
+                        totalDistanceMeters += leg.distance.value;
+                        totalDurationSeconds += leg.duration.value;
+                    });
+
+                    const isRoundTrip = roundTripToggle.checked;
+                    
+                    if (isRoundTrip) {
+                        // Calculate return journey if round trip is selected
+                        calculateReturnTrip(origin, destination, totalDistanceMeters, totalDurationSeconds, fuelEfficiency, fuelPrice, distanceToFirstStopMeters);
+                    } else {
+                        // Finalize calculation for one-way trip
+                        finalizeTripCalculation(totalDistanceMeters, totalDurationSeconds, fuelEfficiency, fuelPrice, distanceToFirstStopMeters);
+                    }
+                });
             });
         }
 
@@ -832,6 +1235,19 @@
         addDropoffButton.addEventListener('click', addDropoff);
         calculateButton.addEventListener('click', calculateTripCost);
         currentLocationButton.addEventListener('click', setCurrentLocation); 
+        
+        // Listener for the interactive weather button (toggle the active class for the tooltip)
+        weatherOriginDetails.addEventListener('click', () => {
+            weatherOriginDetails.classList.toggle('active');
+        });
+        
+        // Add weather fetch on blur for the Origin input
+        originInput.addEventListener('blur', () => {
+             if (originInput.value.trim()) {
+                fetchWeather(originInput.value, weatherOriginDetails);
+            }
+        });
+
 
         // Load Google Maps API script dynamically
         function loadMapsScript() {

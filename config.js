@@ -7,7 +7,7 @@
  */
 const API_KEY = "AIzaSyCPrjf-DCTbFEQu2Sb38YAJgROy_YvQsoI";
 
-// 2. Firebase Configuration Object (for the Visit Counter)
+// Firebase Configuration Object (for the Visit Counter)
 // IMPORTANT: You MUST replace all placeholder values below with your actual
 // Firebase project configuration object.
 const FIREBASE_CONFIG = {
@@ -19,3 +19,6 @@ const FIREBASE_CONFIG = {
   appId: "1:637376132472:web:a7733235d5041fcdff848d",
   measurementId: "G-R37QXYPGV9"
 };
+// OpenWeatherMap API Key (for current weather data)
+// ===> *** REPLACE THIS STRING WITH YOUR OpenWeatherMap API KEY *** <===
+const WEATHER_API_KEY = "7fb04f42ee85b3449bd14d19e085992b"; 
